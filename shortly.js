@@ -48,8 +48,10 @@ app.get('/create', function(req, res) {
 
 // Retrieves all shortened links from the database to display on page.
 app.get('/links', function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
+  restrict(req, res, function(req, res) {
+    Links.reset().fetch().then(function(links) {
+      res.send(200, links.models);
+    });
   });
 });
 
@@ -106,9 +108,6 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-  req.session.user = req.body.username;
-  console.log('req.session.user should be:', req.body.username);
-  console.log('req.session.user is:', req.session.user);
   var username = req.body.username;
   var password = req.body.password;
 
@@ -117,7 +116,6 @@ app.post('/login', function(req, res) {
     if (model) {
       model.authenticate(model, password, function(access) {
 
-        console.log('inside authenticate promise as user:', username);
         // if password is correct, login
         if (access) {
           req.session.user = req.body.username;
