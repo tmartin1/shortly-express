@@ -1,3 +1,4 @@
+// Uses bookshelf to define and build the sqlite database.
 var Bookshelf = require('bookshelf');
 var path = require('path');
 
@@ -44,6 +45,23 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
 /************************************************************/
 // Add additional schema definitions below
 /************************************************************/
+
+// Defines table to store users, passwords, and emails.
+db.knex.schema.hasTable('users').then(function(exists) {
+  if(!exists) {
+    // If the table does not exist, create it.
+    db.knex.schema.createTable('users', function (user) {
+      user.increments('id').primary();
+      user.string('username', 50);
+      user.string('password', 255);
+      user.string('salt', 255);
+    }).then(function(table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
+// Defines join table to provide many-to-many connections between users and urls.
 
 
 module.exports = db;
