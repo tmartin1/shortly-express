@@ -29,29 +29,20 @@ app.use(cookieParser('secret cookies'));
 app.use(session());
 app.use(express.static(__dirname + '/public'));
 
-// any get or post request should first check login status. If user is not logged in, 
-// they should be redirected to the login page.
-
-var renderIndex = function(req, res) {
-  res.render('index');
-};
-
 // Homepage
-app.get('/', function(req, res) {
-  restrict(req, res, renderIndex);
+app.get('/', util.restrictIn, function(req, res) {
+  res.render('index');
 });
 
 // Create new shortened url. This occurs when user clicks on 'Shorten' from the nav bar.
-app.get('/create', function(req, res) {
-  restrict(req, res, renderIndex);
+app.get('/create', util.restrictIn, function(req, res) {
+  res.render('index');
 });
 
 // Retrieves all shortened links from the database to display on page.
-app.get('/links', function(req, res) {
-  restrict(req, res, function(req, res) {
-    Links.reset().fetch().then(function(links) {
-      res.send(200, links.models);
-    });
+app.get('/links', util.restrictIn, function(req, res) {
+  Links.reset().fetch().then(function(links) {
+    res.send(200, links.models);
   });
 });
 
@@ -93,17 +84,8 @@ app.post('/links', function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-function restrict(req, res, next) {
-  // Checks if user is logged in for this session.
-  if (req.session.user) {
-    next(req, res);
-  } else {
-    // req.session.error = 'Access denied!';
-    res.redirect('/login');
-  }
-};
 
-app.get('/login', function(req, res) {
+app.get('/login', util.restrictOut, function(req, res) {
   res.render('login');
 });
 
@@ -137,26 +119,36 @@ app.post('/login', function(req, res) {
   });
 });
 
-app.get('/signup', function(req, res) {
+app.get('/signup', util.restrictOut, function(req, res) {
   res.render('signup');
 });
 
 app.post('/signup', function(req, res) {
-  // Save user and redirect to home page.
-  var newUser = new User({
-    username: req.body.username,
-    password: req.body.password
-  });
+  // Check to see if username already exists.
+  new User({ username: req.body.username }).fetch().then(function(model) {
+    if (!model) {
+      // If username does not yet exist, then create new user.
+      var newUser = new User({
+        username: req.body.username,
+        password: req.body.password
+      });
 
-  newUser.save().then(function(newUser) {
-    req.session.user = newUser.username;
-    res.redirect('/');
+      newUser.save().then(function(newUser) {
+        req.session.user = newUser.username;
+        res.redirect('/');
+      });
+    } else {
+      // If user already exists, new user is not created.
+      console.log('Error: Username already exists, please choose a different username.');
+      res.redirect('/signup');
+    }
   });
 });
 
 app.get('/logout', function(req, res) {
-  req.session.user = undefined;
-  res.redirect('/login');
+  req.session.destroy(function() {
+    res.redirect('/login');
+  });
 });
 
 /************************************************************/
