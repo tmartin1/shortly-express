@@ -148,8 +148,6 @@ app.post('/signup', function(req, res) {
     password: req.body.password
   });
 
-  console.log(newUser);
-
   newUser.save().then(function(newUser) {
     req.session.user = newUser.username;
     res.redirect('/');

@@ -25,7 +25,7 @@ describe('', function() {
 
     // delete link for roflzoo from db so it can be created later for the test
     db.knex('urls')
-      .where('url', '=', 'http://www.roflzoo.com/')
+      .where('url', '=', 'http://roflzoo.com/')
       .del()
       .catch(function(error) {
         throw {
@@ -63,7 +63,7 @@ describe('', function() {
 
     var requestWithSession = request.defaults({jar: true});
 
-    xbeforeEach(function(done){      // create a user that we can then log-in with
+    beforeEach(function(done){      // create a user that we can then log-in with
       new User({
           'username': 'Phillip',
           'password': 'Phillip'
@@ -107,13 +107,13 @@ describe('', function() {
         'followAllRedirects': true,
         'uri': 'http://127.0.0.1:4568/links',
         'json': {
-          'url': 'http://www.roflzoo.com/'
+          'url': 'http://roflzoo.com/'
         }
       };
 
       it('Responds with the short code', function(done) {
         requestWithSession(options, function(error, res, body) {
-          expect(res.body.url).to.equal('http://www.roflzoo.com/');
+          expect(res.body.url).to.equal('http://roflzoo.com/');
           expect(res.body.code).to.not.be.null;
           done();
         });
@@ -122,12 +122,12 @@ describe('', function() {
       it('New links create a database entry', function(done) {
         requestWithSession(options, function(error, res, body) {
           db.knex('urls')
-            .where('url', '=', 'http://www.roflzoo.com/')
+            .where('url', '=', 'http://roflzoo.com/')
             .then(function(urls) {
               if (urls['0'] && urls['0']['url']) {
                 var foundUrl = urls['0']['url'];
               }
-              expect(foundUrl).to.equal('http://www.roflzoo.com/');
+              expect(foundUrl).to.equal('http://roflzoo.com/');
               done();
             });
         });
@@ -156,7 +156,7 @@ describe('', function() {
       beforeEach(function(done){
         // save a link to the database
         link = new Link({
-          url: 'http://www.roflzoo.com/',
+          url: 'http://roflzoo.com/',
           title: 'Funny animal pictures, funny animals, funniest dogs',
           base_url: 'http://127.0.0.1:4568'
         });
@@ -171,7 +171,7 @@ describe('', function() {
           'followAllRedirects': true,
           'uri': 'http://127.0.0.1:4568/links',
           'json': {
-            'url': 'http://www.roflzoo.com/'
+            'url': 'http://roflzoo.com/'
           }
         };
 
@@ -314,7 +314,7 @@ describe('', function() {
       });
     });
 
-    it('Users that do not exist are kept on login page', function(done) {
+    it('Users that do not exist are directed to signup page', function(done) {
       var options = {
         'method': 'POST',
         'uri': 'http://127.0.0.1:4568/login',
@@ -325,7 +325,7 @@ describe('', function() {
       };
 
       requestWithSession(options, function(error, res, body) {
-        expect(res.headers.location).to.equal('/login');
+        expect(res.headers.location).to.equal('/signup');
         done();
       });
     });
